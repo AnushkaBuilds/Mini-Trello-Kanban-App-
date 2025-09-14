@@ -1,0 +1,216 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  avatar    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  ownedWorkspaces Workspace[] @relation("WorkspaceOwner")
+  ownedBoards     Board[]     @relation("BoardOwner")
+  workspaceMembers WorkspaceMember[]
+  boardMembers    BoardMember[]
+  cardAssignments CardAssignment[]
+  comments        Comment[]
+  activities      Activity[]
+
+  @@index([email])
+  @@index([createdAt])
+  @@map("users")
+}
+
+model Workspace {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  ownerId     String
+
+  // Relations
+  owner  User           @relation("WorkspaceOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members WorkspaceMember[]
+  boards Board[]
+
+  @@map("workspaces")
+}
+
+model WorkspaceMember {
+  id          String @id @default(cuid())
+  workspaceId String
+  userId      String
+  role        String @default("member") // owner, admin, member
+  createdAt   DateTime @default(now())
+
+  // Relations
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+  @@map("workspace_members")
+}
+
+model Board {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  visibility  String   @default("private") // private, workspace
+  position    Float    @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  workspaceId String?
+  ownerId     String
+
+  // Relations
+  workspace  Workspace? @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  owner      User       @relation("BoardOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members    BoardMember[]
+  lists      List[]
+  activities Activity[]
+
+  @@index([ownerId, createdAt])
+  @@index([workspaceId, createdAt])
+  @@map("boards")
+}
+
+model BoardMember {
+  id      String @id @default(cuid())
+  boardId String
+  userId  String
+  role    String @default("member") // owner, admin, member
+  createdAt DateTime @default(now())
+
+  // Relations
+  board Board @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([boardId, userId])
+  @@map("board_members")
+}
+
+model List {
+  id        String   @id @default(cuid())
+  title     String
+  position  Float    @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  boardId   String
+
+  // Relations
+  board Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  cards Card[]
+
+  @@index([boardId, position])
+  @@index([boardId, createdAt])
+  @@map("lists")
+}
+
+model Card {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  position    Float     @default(0)
+  dueDate     DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  listId      String
+
+  // Relations
+  list        List             @relation(fields: [listId], references: [id], onDelete: Cascade)
+  labels      CardLabel[]
+  assignments CardAssignment[]
+  comments    Comment[]
+  activities  Activity[]
+
+  @@index([listId, position])
+  @@index([dueDate])
+  @@map("cards")
+}
+
+model Label {
+  id        String   @id @default(cuid())
+  name      String
+  color     String   @default("#61bd4f")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  cardLabels CardLabel[]
+
+  @@map("labels")
+}
+
+model CardLabel {
+  id      String @id @default(cuid())
+  cardId  String
+  labelId String
+
+  // Relations
+  card  Card  @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  label Label @relation(fields: [labelId], references: [id], onDelete: Cascade)
+
+  @@unique([cardId, labelId])
+  @@map("card_labels")
+}
+
+model CardAssignment {
+  id     String @id @default(cuid())
+  cardId String
+  userId String
+
+  // Relations
+  card Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([cardId, userId])
+  @@map("card_assignments")
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  text      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  cardId    String
+  authorId  String
+
+  // Relations
+  card   Card @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@map("comments")
+}
+
+model Activity {
+  id        String   @id @default(cuid())
+  type      String   // card_created, card_moved, card_updated, comment_added, label_changed, etc.
+  data      String   // Additional data for the activity (JSON as string for SQLite)
+  createdAt DateTime @default(now())
+  cardId    String?
+  boardId   String?
+  userId    String
+
+  // Relations
+  card  Card?  @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  board Board? @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([boardId, createdAt])
+  @@index([cardId, createdAt])
+  @@index([userId, createdAt])
+  @@map("activities")
+}

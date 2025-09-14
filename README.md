@@ -86,6 +86,17 @@ npm run dev
 - **Backend API**: http://localhost:3001
 - **API Documentation**: http://localhost:3001/api/v1/docs
 - **Health Check**: http://localhost:3001/api/health
+  
+## 📸 Screenshots  
+
+### 🏠 Dashboard  
+![Dashboard](./screenshots/dashboard.png)  
+
+### 📋 Board View  
+![Board](./screenshots/board.png)  
+
+### 🗂️ Card Details  
+![Card](./screenshots/card.png)  
 
 ## 🔑 Demo Credentials
 

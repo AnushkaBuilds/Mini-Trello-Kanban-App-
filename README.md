@@ -87,17 +87,16 @@ npm run dev
 - **API Documentation**: http://localhost:3001/api/v1/docs
 - **Health Check**: http://localhost:3001/api/health
   
-## 📸 Screenshots  
+## 🖼️ Trello Snippets  
 
-### 🏠 Dashboard  
-![Dashboard](./screenshots/dashboard.png)  
+### 🏠 Dashboard (Board View)  
+![Dashboard](./Trello%20Snippets/Boards.jpg)  
 
-### 📋 Board View  
-![Board](./screenshots/board.png)  
+### 📋 Card View  
+![Cards](./Trello%20Snippets/Cards.jpg)  
 
-### 🗂️ Card Details  
-![Card](./screenshots/card.png)  
-
+### 🔑 Login Page  
+![Login Page](./Trello%20Snippets/Login%20page.jpg)  
 ## 🔑 Demo Credentials
 
 The seed script creates two demo users:
